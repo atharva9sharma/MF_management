@@ -22,17 +22,27 @@ def main():
     # File Selection
     uploaded_file = st.sidebar.file_uploader("Upload CAS Excel File", type=['xlsx', 'xls'])
     
-    # Fallback to default if no file uploaded (for ease of use)
-    default_path = '/Users/nbt3157/Personal/MF_management/cas_detailed_report_2026_01_20_151931.xlsx'
+    DEFAULT_FILE = 'default_cas.xlsx'
     
     if uploaded_file is not None:
         file_source = uploaded_file
-    elif os.path.exists(default_path):
-        st.sidebar.info("Using default file. Upload new file to update.")
-        file_source = default_path
+        # Option to save as default
+        if st.sidebar.button("Set as Default"):
+            with open(DEFAULT_FILE, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            st.sidebar.success("File saved as default!")
+    elif os.path.exists(DEFAULT_FILE):
+        st.sidebar.info("Using default cached file.")
+        file_source = DEFAULT_FILE
     else:
-        st.warning("Please upload a CAS Excel file.")
-        return
+        # Fallback to local path for development if it exists, otherwise warn
+        dev_path = '/Users/nbt3157/Personal/MF_management/cas_detailed_report_2026_01_20_151931.xlsx'
+        if os.path.exists(dev_path):
+             st.sidebar.info("Using local dev file.")
+             file_source = dev_path
+        else:
+            st.warning("Please upload a CAS Excel file to proceed.")
+            return
 
     processor, df = load_data(file_source)
     
