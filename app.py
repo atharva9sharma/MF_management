@@ -97,7 +97,7 @@ def main():
             "3 Years": 3*365,
             "All Time": None
         }
-        selected_range = st.radio("Select Time Range", list(time_ranges.keys()), index=3, horizontal=True)
+        selected_range = st.radio("Select Time Range", list(time_ranges.keys()), index=1, horizontal=True)
         
         # Filter NAV data based on selection
         end_date = datetime.datetime.now()
@@ -203,6 +203,9 @@ def main():
         col1.metric("Total Invested", f"₹{total_invested:,.2f}")
         col2.metric("Current Value", f"₹{current_value:,.2f}")
         col3.metric("Profit/Loss", f"₹{profit:,.2f}", delta_color="normal")
+        
+    st.markdown("---")
+    st.markdown("<div style='text-align: center; color: grey;'>Made By Atharva</div>", unsafe_allow_html=True)
 
 import datetime
 if __name__ == "__main__":

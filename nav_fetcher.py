@@ -13,6 +13,7 @@ class NavFetcher:
         self.cache_file = 'nav_cache.json'
         self.mapping_file = 'scheme_mapping.json'
         self.load_mappings()
+        self.load_cache()
 
     def load_mappings(self):
         if os.path.exists(self.mapping_file):
@@ -24,6 +25,20 @@ class NavFetcher:
     def save_mappings(self):
         with open(self.mapping_file, 'w') as f:
             json.dump(self.mappings, f, indent=4)
+
+    def load_cache(self):
+        if os.path.exists(self.cache_file):
+            try:
+                with open(self.cache_file, 'r') as f:
+                    self.cache = json.load(f)
+            except:
+                self.cache = {}
+        else:
+            self.cache = {}
+
+    def save_cache(self):
+        with open(self.cache_file, 'w') as f:
+            json.dump(self.cache, f, indent=4)
 
     def get_scheme_code(self, scheme_name):
         """
@@ -50,17 +65,47 @@ class NavFetcher:
     def fetch_historical_nav(self, scheme_code):
         """
         Fetches historical NAV for a given scheme code.
+        Checks cache first. Cache is valid for 24 hours.
         """
         if not scheme_code:
             return None
             
+        # Check Cache
+        today_str = datetime.date.today().isoformat()
+        
+        if scheme_code in self.cache:
+            last_updated = self.cache[scheme_code].get('last_updated')
+            # If updated today, return cached data
+            if last_updated == today_str:
+                data = self.cache[scheme_code]['data']
+                df = pd.DataFrame(data)
+                df['date'] = pd.to_datetime(df['date']) # Format is already ISO in JSON usually or we need to check
+                # When saving to JSON, dates become strings. 
+                # Let's standardize on saving as list of dicts with ISO date strings
+                return df
+
         try:
             data = self.mf.get_scheme_historical_nav(scheme_code)
             if data and 'data' in data:
-                df = pd.DataFrame(data['data'])
+                raw_data = data['data']
+                
+                # Process for DataFrame
+                df = pd.DataFrame(raw_data)
                 df['date'] = pd.to_datetime(df['date'], format='%d-%m-%Y')
                 df['nav'] = pd.to_numeric(df['nav'])
                 df = df.sort_values('date')
+                
+                # Update Cache
+                # Convert date back to string for JSON serialization
+                cache_data = df.copy()
+                cache_data['date'] = cache_data['date'].dt.strftime('%Y-%m-%d')
+                
+                self.cache[scheme_code] = {
+                    'last_updated': today_str,
+                    'data': cache_data.to_dict('records')
+                }
+                self.save_cache()
+                
                 return df
         except Exception as e:
             print(f"Error fetching NAV for {scheme_code}: {e}")

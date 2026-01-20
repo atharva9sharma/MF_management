@@ -4,4 +4,3 @@ __pycache__/
 *.xls
 *.DS_Store
 nav_cache.json
-scheme_mapping.json
