@@ -1,0 +1,8 @@
+streamlit
+pandas
+plotly
+mftool
+fuzzywuzzy
+python-Levenshtein
+openpyxl
+deprecated

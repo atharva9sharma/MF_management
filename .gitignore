@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.xlsx
+*.xls
+*.DS_Store
+nav_cache.json
+scheme_mapping.json
